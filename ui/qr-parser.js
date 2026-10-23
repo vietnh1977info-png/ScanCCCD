@@ -20,7 +20,26 @@
     }
     return Object.fromEntries(fields.map((k,i)=>[k,parts[i]]));
   }
-  const api={fields,parseQR};
+  function decodeQR(qr){
+    const bytes=Uint8Array.from(qr.binaryData||[]);
+    const candidates=[];
+    // jsQR silently drops a whole byte segment when its UTF-8 decoding fails.
+    // Decode the original bytes together, including UTF-16 only when identified.
+    const le=(bytes[0]===255&&bytes[1]===254)||
+      (bytes.length>=24&&Array.from({length:12},(_,i)=>bytes[2*i]>=48&&bytes[2*i]<=57&&bytes[2*i+1]===0).every(Boolean));
+    const be=(bytes[0]===254&&bytes[1]===255)||
+      (bytes.length>=24&&Array.from({length:12},(_,i)=>bytes[2*i]===0&&bytes[2*i+1]>=48&&bytes[2*i+1]<=57).every(Boolean));
+    for(const encoding of le?['utf-16le']:be?['utf-16be']:['utf-8']){
+      try{if(bytes.length)candidates.push(new TextDecoder(encoding,{fatal:true}).decode(bytes));}catch{}
+    }
+    const lostByteSegment=(qr.chunks||[]).some(c=>c.type==='byte'&&c.bytes?.length&&!c.text);
+    if(!lostByteSegment&&typeof qr.data==='string')candidates.push(qr.data);
+    for(const text of candidates){try{return {text,record:parseQR(text)};}catch{}}
+    const text=typeof qr.data==='string'?qr.data:'';
+    const separators=(text.match(/\|/g)||[]).length;
+    throw Error(`Đã nhận mã QR nhưng chưa đọc được dữ liệu CCCD: ${bytes.length} byte, ${text.length} ký tự, ${separators} dấu |. Vui lòng báo lại các con số này; không gửi nội dung QR hoặc ảnh thẻ.`);
+  }
+  const api={fields,parseQR,decodeQR};
   if(typeof module==='object'&&module.exports)module.exports=api;
   else root.CCCD=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

@@ -50,3 +50,7 @@ Bộ kiểm tra hiện bao phủ phân tích QR và CSV, không thay thế kiể
 ## Giao diện web trên PC
 
 Chạy chương trình kết nối bằng `npm start`, bấm Ghép đôi điện thoại và sao chép địa chỉ `http://127.0.0.1:.../desktop?token=...` hiển thị để mở bằng trình duyệt ngay trên PC. Không chia sẻ địa chỉ chứa token. Giao diện PC bị giới hạn truy cập từ máy cục bộ; điện thoại chỉ dùng trang chụp QR. Chương trình kết nối phải tiếp tục chạy để lưu và nhập Excel/HIS. Ghép đôi lại trong một cửa sổ sẽ vô hiệu hóa token của các cửa sổ cũ.
+
+### Chẩn đoán QR đọc được nhưng không tách được trường
+
+Bộ đọc dùng byte gốc của jsQR để tránh mất đoạn UTF-8, hỗ trợ UTF-16 có BOM hoặc mẫu số CCCD UTF-16 rõ ràng. Không suy đoán tên/địa chỉ khi không giải mã được. Nếu gặp thông báo gồm số byte, số ký tự và số dấu `|`, chỉ gửi các con số cùng cách quét để hỗ trợ chẩn đoán; không gửi nội dung QR hoặc ảnh CCCD. Bộ kiểm tra có ảnh QR tổng hợp UTF-8, UTF-8 chia đoạn và UTF-16, chưa thay thế kiểm thử trên thẻ và webcam thực tế.
