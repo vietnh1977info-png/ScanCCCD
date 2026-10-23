@@ -1,0 +1,1 @@
+const {contextBridge,ipcRenderer}=require('electron');contextBridge.exposeInMainWorld('api',Object.fromEntries(['records','save','delete','export','pair','type'].map(k=>[k,(...args)=>ipcRenderer.invoke(k,...args)])));contextBridge.exposeInMainWorld('scans',{listen:fn=>ipcRenderer.on('scan',(_,r)=>fn(r))});
